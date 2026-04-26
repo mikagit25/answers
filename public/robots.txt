@@ -1,0 +1,39 @@
+# Robots.txt для Answers Platform
+# Разрешаем индексацию всем поисковым системам
+
+User-agent: *
+Allow: /
+Allow: /articles/
+Allow: /traditions/
+Allow: /faq
+Allow: /about
+Allow: /blog
+
+# Запрещаем индексацию технических страниц
+Disallow: /api/
+Disallow: /backend/
+Disallow: /frontend/node_modules/
+Disallow: /tests/
+Disallow: /.git/
+Disallow: /.env
+Disallow: /private/
+Disallow: /admin/
+
+# Указываем расположение sitemap
+Sitemap: https://answers-platform.com/sitemap.xml
+
+# Специальные правила для Googlebot
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+# Специальные правила для Yandex
+User-agent: Yandex
+Allow: /
+Clean-param: utm_source&utm_medium&utm_campaign
+Crawl-delay: 2
+
+# Правила для Bing
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 2

@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Answers Platform - Multilingual</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 2em;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .language-selector {
+            position: relative;
+        }
+        
+        .lang-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s;
+        }
+        
+        .lang-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .lang-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 10px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 10px;
+            min-width: 250px;
+            display: none;
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .lang-dropdown.show {
+            display: block;
+            animation: fadeIn 0.2s ease-in;
+        }
+        
+        .lang-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .lang-option:hover {
+            background: #f0f0f0;
+        }
+        
+        .lang-option.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .lang-flag {
+            font-size: 24px;
+        }
+        
+        .lang-name {
+            font-weight: 600;
+        }
+        
+        .lang-native {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+        
+        select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .depth-selector {
+            margin-bottom: 20px;
+        }
+        
+        .depth-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        
+        .depth-option {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            background: white;
+        }
+        
+        .depth-option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .depth-option.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .depth-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .depth-desc {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+        
+        .conversation-indicator {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .conversation-indicator.show {
+            display: block;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .compare-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+        
+        .compare-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            margin-top: 15px;
+            font-size: 14px;
+            padding: 12px 20px;
+        }
+        
+        .compare-btn:hover {
+            box-shadow: 0 10px 20px rgba(245, 87, 108, 0.3);
+        }
+        
+        .comparison-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #f5576c;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .comparison-tradition {
+            font-weight: 600;
+            color: #f5576c;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .comparison-summary {
+            color: #555;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        
+        .answer {
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .metadata {
+            font-size: 14px;
+            color: #666;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .metadata span {
+            display: inline-block;
+            margin-right: 15px;
+        }
+        
+        .badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .error {
+            background: #fee;
+            border-left-color: #c33;
+            color: #c33;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #667eea;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .follow-up-input {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            display: none;
+        }
+        
+        .follow-up-input.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <!-- Custom Logo SVG -->
+                <svg width="60" height="60" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+                    <defs>
+                        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                        </linearGradient>
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    
+                    <!-- Outer circle - representing unity of wisdom -->
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="url(#logoGradient)" stroke-width="3" opacity="0.3"/>
+                    
+                    <!-- Eight rays representing 8 traditions -->
+                    <g filter="url(#glow)">
+                        <!-- Ray 1 - Top (Stoicism) -->
+                        <line x1="50" y1="15" x2="50" y2="25" stroke="url(#logoGradient)" stroke-width="3" stroke-linecap="round"/>
+                        
+                        <!-- Ray 2 - Top Right (Christianity) -->
+                        <line x1="71.2" y1="21.2" x2="65.9" y2="28.8" stroke="url(#logoGradient)" stroke-width="3" stroke-linecap="round"/>
+                        
+                        <!-- Ray 3 - Right (Islam) -->
+                        <line x1="85" y1="42.4" x2="75" y2="45.9" stroke="url(#logoGradient)" stroke-width="3" stroke-linecap="round"/>
+                        
+                        <!-- Ray 4 - Bottom Right (Buddhism) -->
+                        <line x1="78.8" y1="71.2" x2="71.2" y2="65.9" stroke="url(#logoGradient)" stroke-width="3" stroke-linecap="round"/>
+                        
+                        <!-- Ray 5 - Bottom (Judaism) -->
+                        <line x1="50" y1="85" x2="50" y2="75" stroke="url(#logoGradient)" stroke-width="3" stroke-linecap="round"/>
+                        
+                        <!-- Ray 6 - Bottom Left (Hinduism) -->
+                        <line x1="21.2" y1="78.8" x2="28.8" y2="71.2" stroke="url(#logoGradient)" stroke-width="3" stroke-linecap="round"/>
+                        
+                        <!-- Ray 7 - Left (Taoism) -->
+                        <line x1="15" y1="57.6" x2="25" y2="54.1" stroke="url(#logoGradient)" stroke-width="3" stroke-linecap="round"/>
+                        
+                        <!-- Ray 8 - Top Left (Humanism) -->
+                        <line x1="21.2" y1="28.8" x2="28.8" y2="34.1" stroke="url(#logoGradient)" stroke-width="3" stroke-linecap="round"/>
+                    </g>
+                    
+                    <!-- Center symbol - Open book / wisdom -->
+                    <path d="M 35 45 Q 50 40 65 45 L 65 60 Q 50 55 35 60 Z" 
+                          fill="url(#logoGradient)" 
+                          opacity="0.8"
+                          filter="url(#glow)"/>
+                    
+                    <!-- Light/Knowledge emanating from center -->
+                    <circle cx="50" cy="50" r="8" fill="white" opacity="0.9"/>
+                    <circle cx="50" cy="50" r="5" fill="url(#logoGradient)"/>
+                    
+                    <!-- Small dots at the end of each ray -->
+                    <circle cx="50" cy="15" r="2.5" fill="url(#logoGradient)"/>
+                    <circle cx="71.2" cy="21.2" r="2.5" fill="url(#logoGradient)"/>
+                    <circle cx="85" cy="42.4" r="2.5" fill="url(#logoGradient)"/>
+                    <circle cx="78.8" cy="71.2" r="2.5" fill="url(#logoGradient)"/>
+                    <circle cx="50" cy="85" r="2.5" fill="url(#logoGradient)"/>
+                    <circle cx="21.2" cy="78.8" r="2.5" fill="url(#logoGradient)"/>
+                    <circle cx="15" cy="57.6" r="2.5" fill="url(#logoGradient)"/>
+                    <circle cx="21.2" cy="28.8" r="2.5" fill="url(#logoGradient)"/>
+                </svg>
+                
+                <div>
+                    <h1 id="appTitle" data-translate="app_title">Answers Platform</h1>
+                    <p class="subtitle" id="appSubtitle" data-translate="app_subtitle">Wisdom from 8 philosophical and religious traditions</p>
+                </div>
+            </div>
+            
+            <div class="language-selector">
+                <button class="lang-btn" onclick="toggleLanguageDropdown()">
+                    <span id="currentLangFlag">🇬🇧</span>
+                    <span id="currentLangName">English</span>
+                    <span>▼</span>
+                </button>
+                <div class="lang-dropdown" id="langDropdown"></div>
+            </div>
+        </div>
+        
+        <form id="questionForm">
+            <div class="conversation-indicator" id="convIndicator">
+                💬 Продолжение диалога | Conversation in progress
+            </div>
+            
+            <div class="form-group">
+                <label for="tradition" id="selectTraditionLabel" data-translate="select_tradition">Select a Tradition:</label>
+                <select id="tradition" required>
+                    <option value="stoicism" data-translate="tradition_stoicism">Stoicism</option>
+                    <option value="christianity" data-translate="tradition_christianity">Christianity</option>
+                    <option value="islam" data-translate="tradition_islam">Islam</option>
+                    <option value="buddhism" data-translate="tradition_buddhism">Buddhism</option>
+                    <option value="judaism" data-translate="tradition_judaism">Judaism</option>
+                    <option value="hinduism" data-translate="tradition_hinduism">Hinduism</option>
+                    <option value="taoism" data-translate="tradition_taoism">Taoism</option>
+                    <option value="humanism" data-translate="tradition_humanism">Secular Humanism</option>
+                </select>
+            </div>
+            
+            <div class="depth-selector">
+                <label id="depthLabel" data-translate="depth_of_answer">Depth of Answer:</label>
+                <div class="depth-options">
+                    <div class="depth-option active" data-depth="basic" onclick="selectDepth('basic')">
+                        <div class="depth-title">📝 Basic</div>
+                        <div class="depth-desc">Quick overview (~300 words)</div>
+                    </div>
+                    <div class="depth-option" data-depth="detailed" onclick="selectDepth('detailed')">
+                        <div class="depth-title">📖 Detailed</div>
+                        <div class="depth-desc">Comprehensive (~500 words)</div>
+                    </div>
+                    <div class="depth-option" data-depth="comprehensive" onclick="selectDepth('comprehensive')">
+                        <div class="depth-title">🎓 Comprehensive</div>
+                        <div class="depth-desc">In-depth analysis (~800 words)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="question" id="enterQuestionLabel" data-translate="enter_question">Enter your question:</label>
+                <textarea 
+                    id="question" 
+                    data-placeholder="question_placeholder"
+                    placeholder="For example: How to overcome fear of the future?"
+                    required
+                    minlength="10"
+                    maxlength="500"
+                ></textarea>
+            </div>
+            
+            <button type="submit" id="submitBtn" data-translate="get_answer">
+                Get Answer
+            </button>
+        </form>
+        
+        <div id="result" class="result">
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Generating answer...</p>
+            </div>
+            <div id="content"></div>
+        </div>
+    </div>
+    
+    <script>
+        let currentLang = 'en';
+        let supportedLanguages = [];
+        let lastQuestion = '';
+        let lastTradition = '';
+        let currentDepth = 'basic';
+        let conversationId = null;
+        
+        // Полные переводы для всех 12 языков
+        const translations = {
+            'en': {
+                'app_title': 'Answers Platform',
+                'app_subtitle': 'Wisdom from 8 philosophical and religious traditions',
+                'select_tradition': 'Select a Tradition:',
+                'enter_question': 'Enter your question:',
+                'question_placeholder': 'For example: How to overcome fear of the future?',
+                'get_answer': 'Get Answer',
+                'answer': 'Answer',
+                'sources': 'Sources',
+                'compare_traditions': '🔍 See what other traditions say',
+                'comparing': 'Comparing approaches...',
+                'other_traditions': 'Other Traditions',
+                'error': 'Error',
+                'loading': 'Loading...',
+                'generating_answer': 'Generating answer...',
+                'depth_of_answer': 'Depth of Answer:',
+                'continue_conversation': '💬 Continue the conversation - ask a follow-up question',
+                'follow_up_placeholder': 'Ask a follow-up question based on the answer...',
+                'ask_follow_up': 'Ask Follow-up Question',
+                'model': 'Model',
+                'provider': 'Provider',
+                'fallback_used': 'Fallback Used',
+                'depth_basic': 'Basic',
+                'depth_detailed': 'Detailed',
+                'depth_comprehensive': 'Comprehensive',
+                'tradition_stoicism': 'Stoicism',
+                'tradition_christianity': 'Christianity',
+                'tradition_islam': 'Islam',
+                'tradition_buddhism': 'Buddhism',
+                'tradition_judaism': 'Judaism',
+                'tradition_hinduism': 'Hinduism',
+                'tradition_taoism': 'Taoism',
+                'tradition_humanism': 'Secular Humanism'
+            },
+            'ru': {
+                'app_title': 'Платформа Ответов',
+                'app_subtitle': 'Мудрость 8 философских и религиозных традиций',
+                'select_tradition': 'Выберите традицию:',
+                'enter_question': 'Введите ваш вопрос:',
+                'question_placeholder': 'Например: Как преодолеть страх перед будущим?',
+                'get_answer': 'Получить ответ',
+                'answer': 'Ответ',
+                'sources': 'Источники',
+                'compare_traditions': '🔍 Посмотреть, что говорят другие традиции',
+                'comparing': 'Сравниваем подходы...',
+                'other_traditions': 'Другие традиции',
+                'error': 'Ошибка',
+                'loading': 'Загрузка...',
+                'generating_answer': 'Генерируем ответ...',
+                'depth_of_answer': 'Глубина ответа:',
+                'continue_conversation': '💬 Продолжить диалог - задайте уточняющий вопрос',
+                'follow_up_placeholder': 'Задайте уточняющий вопрос по ответу...',
+                'ask_follow_up': 'Задать уточняющий вопрос',
+                'model': 'Модель',
+                'provider': 'Провайдер',
+                'fallback_used': 'Использован fallback',
+                'depth_basic': 'Базовый',
+                'depth_detailed': 'Подробный',
+                'depth_comprehensive': 'Всеобъемлющий',
+                'tradition_stoicism': 'Стоицизм',
+                'tradition_christianity': 'Христианство',
+                'tradition_islam': 'Ислам',
+                'tradition_buddhism': 'Буддизм',
+                'tradition_judaism': 'Иудаизм',
+                'tradition_hinduism': 'Индуизм',
+                'tradition_taoism': 'Даосизм',
+                'tradition_humanism': 'Светский гуманизм'
+            },
+            'es': {
+                'app_title': 'Plataforma de Respuestas',
+                'app_subtitle': 'Sabiduría de 8 tradiciones filosóficas y religiosas',
+                'select_tradition': 'Selecciona una tradición:',
+                'enter_question': 'Ingresa tu pregunta:',
+                'question_placeholder': 'Por ejemplo: ¿Cómo superar el miedo al futuro?',
+                'get_answer': 'Obtener Respuesta',
+                'answer': 'Respuesta',
+                'sources': 'Fuentes',
+                'compare_traditions': '🔍 Ver qué dicen otras tradiciones',
+                'comparing': 'Comparando enfoques...',
+                'other_traditions': 'Otras Tradiciones',
+                'error': 'Error',
+                'loading': 'Cargando...',
+                'generating_answer': 'Generando respuesta...',
+                'depth_of_answer': 'Profundidad de la respuesta:',
+                'continue_conversation': '💬 Continuar la conversación - haz una pregunta de seguimiento',
+                'follow_up_placeholder': 'Haz una pregunta de seguimiento basada en la respuesta...',
+                'ask_follow_up': 'Hacer pregunta de seguimiento',
+                'model': 'Modelo',
+                'provider': 'Proveedor',
+                'fallback_used': 'Fallback Usado',
+                'depth_basic': 'Básico',
+                'depth_detailed': 'Detallado',
+                'depth_comprehensive': 'Completo',
+                'tradition_stoicism': 'Estoicismo',
+                'tradition_christianity': 'Cristianismo',
+                'tradition_islam': 'Islam',
+                'tradition_buddhism': 'Budismo',
+                'tradition_judaism': 'Judaísmo',
+                'tradition_hinduism': 'Hinduismo',
+                'tradition_taoism': 'Taoísmo',
+                'tradition_humanism': 'Humanismo Secular'
+            },
+            'fr': {
+                'app_title': 'Plateforme de Réponses',
+                'app_subtitle': 'Sagesse de 8 traditions philosophiques et religieuses',
+                'select_tradition': 'Sélectionnez une tradition:',
+                'enter_question': 'Entrez votre question:',
+                'question_placeholder': 'Par exemple: Comment surmonter la peur de l\'avenir?',
+                'get_answer': 'Obtenir la Réponse',
+                'answer': 'Réponse',
+                'sources': 'Sources',
+                'compare_traditions': 'Voir ce que disent les autres traditions',
+                'comparing': 'Comparaison des approches...',
+                'other_traditions': 'Autres Traditions',
+                'error': 'Erreur',
+                'loading': 'Chargement...',
+                'generating_answer': 'Génération de la réponse...',
+                'depth_of_answer': 'Profondeur de la réponse:',
+                'continue_conversation': 'Continuer la conversation - posez une question de suivi',
+                'follow_up_placeholder': 'Posez une question de suivi basée sur la réponse...',
+                'ask_follow_up': 'Poser une question de suivi',
+                'model': 'Modèle',
+                'provider': 'Fournisseur',
+                'fallback_used': 'Fallback Utilisé',
+                'depth_basic': 'Basique',
+                'depth_detailed': 'Détaillé',
+                'depth_comprehensive': 'Complet',
+                'tradition_stoicism': 'Stoïcisme',
+                'tradition_christianity': 'Christianisme',
+                'tradition_islam': 'Islam',
+                'tradition_buddhism': 'Bouddhisme',
+                'tradition_judaism': 'Judaïsme',
+                'tradition_hinduism': 'Hindouisme',
+                'tradition_taoism': 'Taoïsme',
+                'tradition_humanism': 'Humanisme Laïque'
+            },
+            'de': {
+                'app_title': 'Antworten Plattform',
+                'app_subtitle': 'Weisheit aus 8 philosophischen und religiösen Traditionen',
+                'select_tradition': 'Wähle eine Tradition:',
+                'enter_question': 'Gib deine Frage ein:',
+                'question_placeholder': 'Zum Beispiel: Wie überwinde ich Angst vor der Zukunft?',
+                'get_answer': 'Antwort Erhalten',
+                'answer': 'Antwort',
+                'sources': 'Quellen',
+                'compare_traditions': '🔍 Sehen, was andere Traditionen sagen',
+                'comparing': 'Vergleiche Ansätze...',
+                'other_traditions': 'Andere Traditionen',
+                'error': 'Fehler',
+                'loading': 'Laden...',
+                'generating_answer': 'Antwort wird generiert...',
+                'depth_of_answer': 'Tiefe der Antwort:',
+                'continue_conversation': '💬 Gespräch fortsetzen - stelle eine Folgefrage',
+                'follow_up_placeholder': 'Stelle eine Folgefrage basierend auf der Antwort...',
+                'ask_follow_up': 'Folgefrage stellen',
+                'model': 'Modell',
+                'provider': 'Anbieter',
+                'fallback_used': 'Fallback Verwendet',
+                'depth_basic': 'Grundlegend',
+                'depth_detailed': 'Detailliert',
+                'depth_comprehensive': 'Umfassend',
+                'tradition_stoicism': 'Stoizismus',
+                'tradition_christianity': 'Christentum',
+                'tradition_islam': 'Islam',
+                'tradition_buddhism': 'Buddhismus',
+                'tradition_judaism': 'Judentum',
+                'tradition_hinduism': 'Hinduismus',
+                'tradition_taoism': 'Taoismus',
+                'tradition_humanism': 'Säkularer Humanismus'
+            },
+            'zh': {
+                'app_title': '答案平台',
+                'app_subtitle': '来自8个哲学和宗教传统的智慧',
+                'select_tradition': '选择一个传统：',
+                'enter_question': '输入你的问题：',
+                'question_placeholder': '例如：如何克服对未来的恐惧？',
+                'get_answer': '获取答案',
+                'answer': '答案',
+                'sources': '来源',
+                'compare_traditions': '🔍 查看其他传统的观点',
+                'comparing': '比较不同方法...',
+                'other_traditions': '其他传统',
+                'error': '错误',
+                'loading': '加载中...',
+                'generating_answer': '生成答案中...',
+                'depth_of_answer': '答案深度：',
+                'continue_conversation': '💬 继续对话 - 提出跟进问题',
+                'follow_up_placeholder': '根据答案提出跟进问题...',
+                'ask_follow_up': '提出跟进问题',
+                'model': '模型',
+                'provider': '提供商',
+                'fallback_used': '已使用备用',
+                'depth_basic': '基础',
+                'depth_detailed': '详细',
+                'depth_comprehensive': '全面',
+                'tradition_stoicism': '斯多葛主义',
+                'tradition_christianity': '基督教',
+                'tradition_islam': '伊斯兰教',
+                'tradition_buddhism': '佛教',
+                'tradition_judaism': '犹太教',
+                'tradition_hinduism': '印度教',
+                'tradition_taoism': '道教',
+                'tradition_humanism': '世俗人文主义'
+            },
+            'ar': {
+                'app_title': 'منصة الإجابات',
+                'app_subtitle': 'حكمة من 8 تقاليد فلسفية ودينية',
+                'select_tradition': 'اختر تقليدًا:',
+                'enter_question': 'أدخل سؤالك:',
+                'question_placeholder': 'على سبيل المثال: كيف تتغلب على الخوف من المستقبل؟',
+                'get_answer': 'احصل على إجابة',
+                'answer': 'إجابة',
+                'sources': 'مصادر',
+                'compare_traditions': '🔍 انظر ماذا تقول التقاليد الأخرى',
+                'comparing': 'مقارنة النهج...',
+                'other_traditions': 'تقاليد أخرى',
+                'error': 'خطأ',
+                'loading': 'جارٍ التحميل...',
+                'generating_answer': 'جارٍ إنشاء الإجابة...',
+                'depth_of_answer': 'عمق الإجابة:',
+                'continue_conversation': '💬 متابعة المحادثة - اطرح سؤالاً للمتابعة',
+                'follow_up_placeholder': 'اطرح سؤال متابعة بناءً على الإجابة...',
+                'ask_follow_up': 'اطرح سؤال المتابعة',
+                'model': 'نموذج',
+                'provider': 'مزود',
+                'fallback_used': 'تم استخدام الاحتياطي',
+                'depth_basic': 'أساسي',
+                'depth_detailed': 'مفصل',
+                'depth_comprehensive': 'شامل',
+                'tradition_stoicism': 'الرواقية',
+                'tradition_christianity': 'المسيحية',
+                'tradition_islam': 'الإسلام',
+                'tradition_buddhism': 'البوذية',
+                'tradition_judaism': 'اليهودية',
+                'tradition_hinduism': 'الهندوسية',
+                'tradition_taoism': 'الطاوية',
+                'tradition_humanism': 'الإنسانية العلمانية'
+            },
+            'pt': {
+                'app_title': 'Plataforma de Respostas',
+                'app_subtitle': 'Sabedoria de 8 tradições filosóficas e religiosas',
+                'select_tradition': 'Selecione uma tradição:',
+                'enter_question': 'Digite sua pergunta:',
+                'question_placeholder': 'Por exemplo: Como superar o medo do futuro?',
+                'get_answer': 'Obter Resposta',
+                'answer': 'Resposta',
+                'sources': 'Fontes',
+                'compare_traditions': '🔍 Ver o que outras tradições dizem',
+                'comparing': 'Comparando abordagens...',
+                'other_traditions': 'Outras Tradições',
+                'error': 'Erro',
+                'loading': 'Carregando...',
+                'generating_answer': 'Gerando resposta...',
+                'depth_of_answer': 'Profundidade da resposta:',
+                'continue_conversation': '💬 Continuar a conversa - faça uma pergunta de acompanhamento',
+                'follow_up_placeholder': 'Faça uma pergunta de acompanhamento com base na resposta...',
+                'ask_follow_up': 'Fazer pergunta de acompanhamento',
+                'model': 'Modelo',
+                'provider': 'Provedor',
+                'fallback_used': 'Fallback Usado',
+                'depth_basic': 'Básico',
+                'depth_detailed': 'Detalhado',
+                'depth_comprehensive': 'Abrangente',
+                'tradition_stoicism': 'Estoicismo',
+                'tradition_christianity': 'Cristianismo',
+                'tradition_islam': 'Islã',
+                'tradition_buddhism': 'Budismo',
+                'tradition_judaism': 'Judaísmo',
+                'tradition_hinduism': 'Hinduísmo',
+                'tradition_taoism': 'Taoísmo',
+                'tradition_humanism': 'Humanismo Secular'
+            },
+            'it': {
+                'app_title': 'Piattaforma di Risposte',
+                'app_subtitle': 'Saggezza da 8 tradizioni filosofiche e religiose',
+                'select_tradition': 'Seleziona una tradizione:',
+                'enter_question': 'Inserisci la tua domanda:',
+                'question_placeholder': 'Per esempio: Come superare la paura del futuro?',
+                'get_answer': 'Ottieni Risposta',
+                'answer': 'Risposta',
+                'sources': 'Fonti',
+                'compare_traditions': 'Vedi cosa dicono altre tradizioni',
+                'comparing': 'Confrontando approcci...',
+                'other_traditions': 'Altre Tradizioni',
+                'error': 'Errore',
+                'loading': 'Caricamento...',
+                'generating_answer': 'Generazione risposta...',
+                'depth_of_answer': 'Profondità della risposta:',
+                'continue_conversation': '💬 Continua la conversazione - fai una domanda di follow-up',
+                'follow_up_placeholder': 'Fai una domanda di follow-up basata sulla risposta...',
+                'ask_follow_up': 'Fai domanda di follow-up',
+                'model': 'Modello',
+                'provider': 'Provider',
+                'fallback_used': 'Fallback Usato',
+                'depth_basic': 'Base',
+                'depth_detailed': 'Dettagliato',
+                'depth_comprehensive': 'Completo',
+                'tradition_stoicism': 'Stoicismo',
+                'tradition_christianity': 'Cristianesimo',
+                'tradition_islam': 'Islam',
+                'tradition_buddhism': 'Buddhismo',
+                'tradition_judaism': 'Ebraismo',
+                'tradition_hinduism': 'Induismo',
+                'tradition_taoism': 'Taoismo',
+                'tradition_humanism': 'Umanesimo Secolare'
+            },
+            'tr': {
+                'app_title': 'Cevaplar Platformu',
+                'app_subtitle': '8 felsefi ve dini gelenekten bilgelik',
+                'select_tradition': 'Bir gelenek seçin:',
+                'enter_question': 'Sorunuzu girin:',
+                'question_placeholder': 'Örneğin: Gelecek korkusunun üstesinden nasıl gelinir?',
+                'get_answer': 'Cevap Al',
+                'answer': 'Cevap',
+                'sources': 'Kaynaklar',
+                'compare_traditions': '🔍 Diğer geleneklerin ne dediğini görün',
+                'comparing': 'Yaklaşımlar karşılaştırılıyor...',
+                'other_traditions': 'Diğer Gelenekler',
+                'error': 'Hata',
+                'loading': 'Yükleniyor...',
+                'generating_answer': 'Cevap oluşturuluyor...',
+                'depth_of_answer': 'Cevap derinliği:',
+                'continue_conversation': '💬 Konuşmaya devam et - takip sorusu sor',
+                'follow_up_placeholder': 'Cevaba dayalı bir takip sorusu sor...',
+                'ask_follow_up': 'Takip sorusu sor',
+                'model': 'Model',
+                'provider': 'Sağlayıcı',
+                'fallback_used': 'Fallback Kullanıldı',
+                'depth_basic': 'Temel',
+                'depth_detailed': 'Detaylı',
+                'depth_comprehensive': 'Kapsamlı',
+                'tradition_stoicism': 'Stoacılık',
+                'tradition_christianity': 'Hıristiyanlık',
+                'tradition_islam': 'İslam',
+                'tradition_buddhism': 'Budizm',
+                'tradition_judaism': 'Yahudilik',
+                'tradition_hinduism': 'Hinduizm',
+                'tradition_taoism': 'Taoculuk',
+                'tradition_humanism': 'Seküler Hümanizm'
+            },
+            'hi': {
+                'app_title': 'उत्तर प्लेटफॉर्म',
+                'app_subtitle': '8 दार्शनिक और धार्मिक परंपराओं से ज्ञान',
+                'select_tradition': 'एक परंपरा चुनें:',
+                'enter_question': 'अपना प्रश्न दर्ज करें:',
+                'question_placeholder': 'उदाहरण के लिए: भविष्य के डर को कैसे दूर करें?',
+                'get_answer': 'उत्तर प्राप्त करें',
+                'answer': 'उत्तर',
+                'sources': 'स्रोत',
+                'compare_traditions': '🔍 देखें अन्य परंपराएं क्या कहती हैं',
+                'comparing': 'दृष्टिकोणों की तुलना...',
+                'other_traditions': 'अन्य परंपराएं',
+                'error': 'त्रुटि',
+                'loading': 'लोड हो रहा है...',
+                'generating_answer': 'उत्तर उत्पन्न हो रहा है...',
+                'depth_of_answer': 'उत्तर की गहराई:',
+                'continue_conversation': '💬 वार्तालाप जारी रखें - एक अनुवर्ती प्रश्न पूछें',
+                'follow_up_placeholder': 'उत्तर के आधार पर एक अनुवर्ती प्रश्न पूछें...',
+                'ask_follow_up': 'अनुवर्ती प्रश्न पूछें',
+                'model': 'मॉडल',
+                'provider': 'प्रदाता',
+                'fallback_used': 'फ़ॉलबैक उपयोग किया गया',
+                'depth_basic': 'बुनियादी',
+                'depth_detailed': 'विस्तृत',
+                'depth_comprehensive': 'व्यापक',
+                'tradition_stoicism': 'स्टोइसिज़्म',
+                'tradition_christianity': 'ईसाई धर्म',
+                'tradition_islam': 'इस्लाम',
+                'tradition_buddhism': 'बौद्ध धर्म',
+                'tradition_judaism': 'यहूदी धर्म',
+                'tradition_hinduism': 'हिंदू धर्म',
+                'tradition_taoism': 'ताओ धर्म',
+                'tradition_humanism': 'धर्मनिरपेक्ष मानवतावाद'
+            },
+            'ja': {
+                'app_title': 'アンサープラットフォーム',
+                'app_subtitle': '8つの哲学的・宗教的伝統からの知恵',
+                'select_tradition': '伝統を選択：',
+                'enter_question': '質問を入力：',
+                'question_placeholder': '例：将来への恐怖を克服するには？',
+                'get_answer': '回答を取得',
+                'answer': '回答',
+                'sources': '情報源',
+                'compare_traditions': '他の伝統の見解を見る',
+                'comparing': 'アプローチを比較中...',
+                'other_traditions': '他の伝統',
+                'error': 'エラー',
+                'loading': '読み込み中...',
+                'generating_answer': '回答を生成中...',
+                'depth_of_answer': '回答の深さ：',
+                'continue_conversation': '会話を続ける - フォローアップの質問をする',
+                'follow_up_placeholder': '回答に基づいてフォローアップの質問をする...',
+                'ask_follow_up': 'フォローアップ質問をする',
+                'model': 'モデル',
+                'provider': 'プロバイダー',
+                'fallback_used': 'フォールバック使用済み',
+                'depth_basic': '基本',
+                'depth_detailed': '詳細',
+                'depth_comprehensive': '包括的',
+                'tradition_stoicism': 'ストア派',
+                'tradition_christianity': 'キリスト教',
+                'tradition_islam': 'イスラム教',
+                'tradition_buddhism': '仏教',
+                'tradition_judaism': 'ユダヤ教',
+                'tradition_hinduism': 'ヒンドゥー教',
+                'tradition_taoism': '道教',
+                'tradition_humanism': '世俗的人間主義'
+            }
+        };
+        
+        function getTranslation(key) {
+            if (translations[currentLang] && translations[currentLang][key]) {
+                return translations[currentLang][key];
+            }
+            if (translations['en'][key]) {
+                return translations['en'][key];
+            }
+            return key;
+        }
+        
+        const form = document.getElementById('questionForm');
+        const resultDiv = document.getElementById('result');
+        const loadingDiv = document.getElementById('loading');
+        const contentDiv = document.getElementById('content');
+        const submitBtn = document.getElementById('submitBtn');
+        const convIndicator = document.getElementById('convIndicator');
+        
+        async function loadLanguages() {
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/languages');
+                const data = await response.json();
+                supportedLanguages = data.languages;
+                renderLanguageDropdown();
+                
+                const browserLang = navigator.language.split('-')[0];
+                if (supportedLanguages.find(l => l.code === browserLang)) {
+                    setLanguage(browserLang);
+                }
+                
+                await createConversation();
+            } catch (error) {
+                console.error('Failed to load languages:', error);
+            }
+        }
+        
+        async function createConversation() {
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/conversations/new', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                conversationId = data.conversation_id;
+                console.log('✅ New conversation created:', conversationId);
+            } catch (error) {
+                console.error('Failed to create conversation:', error);
+            }
+        }
+        
+        function selectDepth(depth) {
+            currentDepth = depth;
+            document.querySelectorAll('.depth-option').forEach(opt => {
+                opt.classList.remove('active');
+                if (opt.dataset.depth === depth) {
+                    opt.classList.add('active');
+                }
+            });
+        }
+        
+        function renderLanguageDropdown() {
+            const dropdown = document.getElementById('langDropdown');
+            dropdown.innerHTML = supportedLanguages.map(lang => `
+                <div class="lang-option ${lang.code === currentLang ? 'active' : ''}" 
+                     onclick="setLanguage('${lang.code}')">
+                    <span class="lang-flag">${lang.flag}</span>
+                    <div>
+                        <div class="lang-name">${lang.native_name}</div>
+                        <div class="lang-native">${lang.name}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function toggleLanguageDropdown() {
+            const dropdown = document.getElementById('langDropdown');
+            dropdown.classList.toggle('show');
+        }
+        
+        function setLanguage(langCode) {
+            currentLang = langCode;
+            const langInfo = supportedLanguages.find(l => l.code === langCode);
+            
+            document.getElementById('currentLangFlag').textContent = langInfo.flag;
+            document.getElementById('currentLangName').textContent = langInfo.native_name;
+            
+            document.getElementById('langDropdown').classList.remove('show');
+            
+            updateUITranslations();
+            
+            localStorage.setItem('preferred_language', langCode);
+        }
+        
+        function updateUITranslations() {
+            document.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (key) {
+                    element.textContent = getTranslation(key);
+                }
+            });
+            
+            const questionInput = document.getElementById('question');
+            if (questionInput) {
+                questionInput.placeholder = getTranslation('question_placeholder');
+            }
+            
+            const depthOptions = document.querySelectorAll('.depth-option');
+            depthOptions.forEach((opt) => {
+                const titleEl = opt.querySelector('.depth-title');
+                const descEl = opt.querySelector('.depth-desc');
+                if (titleEl && descEl) {
+                    const depth = opt.dataset.depth;
+                    // Only show emojis for non-German, non-Chinese, non-Arabic, non-Portuguese, non-Turkish, and non-Hindi languages
+                    const showEmoji = currentLang !== 'de' && currentLang !== 'zh' && currentLang !== 'ar' && currentLang !== 'pt' && currentLang !== 'tr' && currentLang !== 'hi';
+                    const emojis = {'basic': '📝', 'detailed': '📖', 'comprehensive': '🎓'};
+                    const emoji = showEmoji ? (emojis[depth] || '') : '';
+                    const separator = showEmoji && emoji ? ' ' : '';
+                    
+                    const depthKey = `depth_${depth}`;
+                    const depthName = getTranslation(depthKey);
+                    titleEl.textContent = `${emoji}${separator}${depthName}`;
+                    
+                    const descriptions = {
+                        'en': {
+                            'basic': 'Quick overview (~300 words)',
+                            'detailed': 'Comprehensive (~500 words)',
+                            'comprehensive': 'In-depth analysis (~800 words)'
+                        },
+                        'ru': {
+                            'basic': 'Быстрый обзор (~300 слов)',
+                            'detailed': 'Подробный (~500 слов)',
+                            'comprehensive': 'Глубокий анализ (~800 слов)'
+                        },
+                        'es': {
+                            'basic': 'Resumen rápido (~300 palabras)',
+                            'detailed': 'Completo (~500 palabras)',
+                            'comprehensive': 'Análisis profundo (~800 palabras)'
+                        },
+                        'fr': {
+                            'basic': 'Aperçu rapide (~300 mots)',
+                            'detailed': 'Complet (~500 mots)',
+                            'comprehensive': 'Analyse approfondie (~800 mots)'
+                        },
+                        'de': {
+                            'basic': 'Schneller Überblick (~300 Wörter)',
+                            'detailed': 'Umfassend (~500 Wörter)',
+                            'comprehensive': 'Tiefgehende Analyse (~800 Wörter)'
+                        },
+                        'zh': {
+                            'basic': '快速概览（约300字）',
+                            'detailed': '全面（约500字）',
+                            'comprehensive': '深入分析（约800字）'
+                        },
+                        'ar': {
+                            'basic': 'نظرة عامة سريعة (~300 كلمة)',
+                            'detailed': 'شامل (~500 كلمة)',
+                            'comprehensive': 'تحليل متعمق (~800 كلمة)'
+                        },
+                        'pt': {
+                            'basic': 'Visão geral rápida (~300 palavras)',
+                            'detailed': 'Abrangente (~500 palavras)',
+                            'comprehensive': 'Análise aprofundada (~800 palavras)'
+                        },
+                        'it': {
+                            'basic': 'Panoramica rapida (~300 parole)',
+                            'detailed': 'Completo (~500 parole)',
+                            'comprehensive': 'Analisi approfondita (~800 parole)'
+                        },
+                        'tr': {
+                            'basic': 'Hızlı genel bakış (~300 kelime)',
+                            'detailed': 'Kapsamlı (~500 kelime)',
+                            'comprehensive': 'Derinlemesine analiz (~800 kelime)'
+                        },
+                        'hi': {
+                            'basic': 'त्वरित अवलोकन (~300 शब्द)',
+                            'detailed': 'व्यापक (~500 शब्द)',
+                            'comprehensive': 'गहन विश्लेषण (~800 शब्द)'
+                        },
+                        'ja': {
+                            'basic': '簡単な概要（約300語）',
+                            'detailed': '包括的（約500語）',
+                            'comprehensive': '詳細な分析（約800語）'
+                        }
+                    };
+                    
+                    const langDescs = descriptions[currentLang] || descriptions['en'];
+                    descEl.textContent = langDescs[depth];
+                }
+            });
+        }
+        
+        document.addEventListener('click', function(event) {
+            const selector = document.querySelector('.language-selector');
+            if (!selector.contains(event.target)) {
+                document.getElementById('langDropdown').classList.remove('show');
+            }
+        });
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            loadLanguages();
+            selectDepth('basic');
+        });
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            lastQuestion = document.getElementById('question').value;
+            lastTradition = document.getElementById('tradition').value;
+            
+            resultDiv.classList.add('show');
+            resultDiv.classList.remove('error');
+            loadingDiv.style.display = 'block';
+            contentDiv.innerHTML = '';
+            submitBtn.disabled = true;
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question: lastQuestion,
+                        tradition_id: lastTradition,
+                        language: currentLang,
+                        depth: currentDepth,
+                        conversation_id: conversationId
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                loadingDiv.style.display = 'none';
+                convIndicator.classList.add('show');
+                
+                contentDiv.innerHTML = `
+                    <div class="answer">${data.answer}</div>
+                    <div class="metadata">
+                        <span class="badge">${data.metadata.provider}</span>
+                        <span>${getTranslation('model')}: ${data.metadata.model}</span>
+                        <span>Depth: ${data.depth}</span>
+                        <span>Tokens: ${data.metadata.tokens_max}</span>
+                    </div>
+                    <button class="compare-btn" onclick="showComparison()">
+                        ${getTranslation('compare_traditions')}
+                    </button>
+                    <div class="follow-up-input show">
+                        <h4 style="margin-bottom: 10px; color: #333;">${getTranslation('continue_conversation')}</h4>
+                        <textarea 
+                            id="followUpQuestion" 
+                            placeholder="${getTranslation('follow_up_placeholder')}"
+                            style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; min-height: 80px; margin-bottom: 10px;"
+                        ></textarea>
+                        <button onclick="askFollowUp()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            ${getTranslation('ask_follow_up')}
+                        </button>
+                    </div>
+                    <div id="comparison-section" class="compare-section" style="display: none;">
+                        <div id="comparison-loading" class="loading">
+                            <div class="spinner"></div>
+                            <p>${getTranslation('comparing')}</p>
+                        </div>
+                        <div id="comparison-content"></div>
+                    </div>
+                `;
+                
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                resultDiv.classList.add('error');
+                contentDiv.innerHTML = `
+                    <div class="answer">❌ ${getTranslation('error')}: ${error.message}</div>
+                `;
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+        
+        async function askFollowUp() {
+            const followUpInput = document.getElementById('followUpQuestion');
+            const followUpQuestion = followUpInput.value.trim();
+            
+            if (!followUpQuestion) {
+                alert('Please enter a follow-up question');
+                return;
+            }
+            
+            const followUpSection = document.querySelector('.follow-up-input');
+            followUpSection.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>${getTranslation('generating_answer')}</p>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/followup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question: followUpQuestion,
+                        tradition_id: lastTradition,
+                        conversation_id: conversationId,
+                        language: currentLang,
+                        context_window: 3
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                contentDiv.innerHTML += `
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 2px dashed #667eea;">
+                        <h4 style="color: #667eea; margin-bottom: 10px;">💬 Follow-up Answer:</h4>
+                        <div class="answer">${data.answer}</div>
+                        <div class="metadata">
+                            <span>Context messages: ${data.context_messages}</span>
+                            <span>${getTranslation('provider')}: ${data.metadata.provider}</span>
+                        </div>
+                    </div>
+                `;
+                
+                followUpSection.innerHTML = `
+                    <h4 style="margin-bottom: 10px; color: #333;">${getTranslation('continue_conversation')}</h4>
+                    <textarea 
+                        id="followUpQuestion" 
+                        placeholder="${getTranslation('follow_up_placeholder')}"
+                        style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; min-height: 80px; margin-bottom: 10px;"
+                    ></textarea>
+                    <button onclick="askFollowUp()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        ${getTranslation('ask_follow_up')}
+                    </button>
+                `;
+                
+            } catch (error) {
+                followUpSection.innerHTML = `
+                    <div class="comparison-card" style="border-left-color: #c33;">
+                        <div class="comparison-tradition" style="color: #c33;">❌ ${getTranslation('error')}</div>
+                        <div class="comparison-summary">${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+        
+        async function showComparison() {
+            const comparisonSection = document.getElementById('comparison-section');
+            const comparisonLoading = document.getElementById('comparison-loading');
+            const comparisonContent = document.getElementById('comparison-content');
+            
+            comparisonSection.style.display = 'block';
+            comparisonLoading.style.display = 'block';
+            comparisonContent.innerHTML = '';
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/compare', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question: lastQuestion,
+                        exclude: lastTradition,
+                        language: currentLang
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                comparisonLoading.style.display = 'none';
+                
+                let html = `<h3 style="margin-bottom: 15px; color: #333;">${getTranslation('other_traditions')}:</h3>`;
+                
+                data.comparisons.forEach(comp => {
+                    html += `
+                        <div class="comparison-card">
+                            <div class="comparison-tradition">${comp.tradition_name}</div>
+                            <div class="comparison-summary">${comp.summary}</div>
+                        </div>
+                    `;
+                });
+                
+                comparisonContent.innerHTML = html;
+                
+            } catch (error) {
+                comparisonLoading.style.display = 'none';
+                comparisonContent.innerHTML = `
+                    <div class="comparison-card" style="border-left-color: #c33;">
+                        <div class="comparison-tradition" style="color: #c33;">❌ ${getTranslation('error')}</div>
+                        <div class="comparison-summary">${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
