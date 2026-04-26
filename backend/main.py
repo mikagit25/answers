@@ -21,7 +21,8 @@ def health_check():
     return {"status": "ok", "timestamp": time.time()}
 
 # Include API routers
-from api.routes import ask, compare
+from api.routes import ask, compare, providers
 
 app.include_router(ask.router, prefix="/api/v1/ask", tags=["Ask"])
 app.include_router(compare.router, prefix="/api/v1/compare", tags=["Compare"])
+app.include_router(providers.router, prefix="/api/v1/providers", tags=["Providers"])

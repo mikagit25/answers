@@ -13,6 +13,8 @@
 
 - **8 Traditions Supported**: Stoicism, Christianity, Islam, Buddhism, Judaism, Hinduism, Taoism, Secular Humanism
 - **Authentic Sources**: Every answer includes 2-4 verified quotes with references
+- **Multi-Provider LLM System**: Automatic fallback between Groq, OpenRouter, Ollama (local), HuggingFace
+- **Zero-Cost Operation**: Works completely free with local Ollama or free API tiers
 - **Cross-Tradition Comparison**: See how different traditions approach the same question
 - **Progressive Web App**: Install on your device, works offline
 - **Mobile-First Design**: Fully responsive from 320px to 1920px
@@ -27,6 +29,7 @@
 - Python 3.11+
 - Node.js 18+
 - Docker & Docker Compose
+- (Optional) Ollama for local LLM: https://ollama.ai/
 
 ### Installation
 
@@ -38,6 +41,27 @@
 **Option 2: Manual Setup**
 
 See [QUICKSTART.md](QUICKSTART.md) for detailed instructions.
+
+### Configuration
+
+**Minimum setup (using only free providers):**
+
+1. **Get Groq API key** (free, 5 min): https://console.groq.com/
+2. **Copy .env.example to .env** and add your key:
+   ```bash
+   cp .env.example backend/.env
+   # Edit backend/.env and add: GROQ_API_KEY=your_key_here
+   ```
+
+**Or use completely free local setup:**
+```bash
+# Install Ollama: https://ollama.ai/
+ollama pull llama3.2
+ollama serve
+# No API keys needed!
+```
+
+See [LLM_PROVIDERS_GUIDE.md](LLM_PROVIDERS_GUIDE.md) for complete setup instructions.
 
 ### Running the Application
 
@@ -59,10 +83,36 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
+## 🤖 Multi-Provider LLM System
+
+The platform uses an intelligent fallback system that automatically switches between multiple LLM providers:
+
+### Provider Priority (Configurable)
+1. **Groq** - Fastest, free tier (30 req/min, 200 req/day)
+2. **OpenRouter** - Free models available
+3. **Ollama** - Local, completely free, no limits ⭐
+4. **HuggingFace** - Free tier fallback
+
+### Benefits
+- ✅ **Never hits rate limits** - automatically switches to next provider
+- ✅ **Zero cost option** - use local Ollama for unlimited free usage
+- ✅ **Maximum reliability** - 4 different providers as backup
+- ✅ **Automatic failover** - no manual intervention needed
+
+### Quick Test
+```bash
+cd backend && python test_llm_providers.py
+```
+
+See [LLM_PROVIDERS_GUIDE.md](LLM_PROVIDERS_GUIDE.md) for detailed setup.
+
+---
+
 ## 📚 Documentation
 
 | Document | Description |
 |----------|-------------|
+| [LLM_PROVIDERS_GUIDE.md](LLM_PROVIDERS_GUIDE.md) | **NEW!** Complete guide to setting up free LLM providers |
 | [QUICKSTART.md](QUICKSTART.md) | Detailed setup and usage guide |
 | [DEVELOPMENT_CHECKLIST.md](DEVELOPMENT_CHECKLIST.md) | Task tracking and remaining work |
 | [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) | Complete overview of what's been built |
@@ -80,22 +130,28 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 └─────────────┘         └──────────────┘         └─────────────┘
                                │
                                ▼
-                        ┌──────────────┐
-                        │   AI Model    │
-                        │  Qwen API     │
-                        └──────────────┘
+                    ┌─────────────────────┐
+                    │  LLM Provider Mgr   │
+                    │  Auto-Fallback:     │
+                    │  Groq → OpenRouter  │
+                    │  → Ollama → HF      │
+                    └─────────────────────┘
 ```
 
 ### Tech Stack
 
 **Backend:**
 - FastAPI, SQLAlchemy, pgvector, LangChain, sentence-transformers
+- **NEW**: Multi-provider LLM manager with automatic fallback
 
 **Frontend:**
 - Next.js 14, React 18, TypeScript, TailwindCSS, next-pwa
 
 **Infrastructure:**
 - PostgreSQL 15, Redis 7, Docker Compose
+
+**LLM Providers:**
+- Groq, OpenRouter, Ollama (local), HuggingFace
 
 ---
 

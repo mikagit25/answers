@@ -1,6 +1,7 @@
 """
 RAG конвейер: загрузка, эмбеддинг, ретривер, генератор ответов.
 Использует гибридный поиск (векторный + BM25) и пост-валидацию источников.
+Теперь использует LLM Provider Manager с автоматическим fallback.
 """
 import hashlib
 import json
@@ -8,13 +9,10 @@ from typing import List, Dict, Optional, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import PGVector
-from langchain.chains import LLMChain
-from langchain.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI
 from core.config import settings
 from rag.prompts import TRADITION_PROMPTS
 from rag.validator import validate_sources
+from core.llm_manager import llm_manager
 
 
 class RAGPipeline:
@@ -23,13 +21,6 @@ class RAGPipeline:
     def __init__(self):
         self.embeddings = HuggingFaceEmbeddings(
             model_name=settings.EMBEDDING_MODEL
-        )
-        self.llm = ChatOpenAI(
-            openai_api_key=settings.QWEN_API_KEY,
-            openai_api_base="https://openrouter.ai/api/v1",  # или прямой API Qwen
-            model_name="qwen/qwen-turbo",
-            temperature=0.3,
-            max_tokens=500,
         )
         
     async def retrieve_context(
@@ -109,10 +100,11 @@ class RAGPipeline:
         question: str, 
         tradition_id: str, 
         sources: List[Dict]
-    ) -> Tuple[str, List[Dict]]:
+    ) -> Tuple[str, List[Dict], Dict]:
         """
         Генерация ответа на основе вопроса и найденных источников.
-        Возвращает ответ и валидированные источники.
+        Использует LLM Provider Manager с автоматическим fallback.
+        Возвращает ответ, валидированные источники и метаданные.
         """
         # Форматирование контекста
         context = self.format_context(sources)
@@ -122,20 +114,31 @@ class RAGPipeline:
         if not prompt_template:
             raise ValueError(f"Неизвестная традиция: {tradition_id}")
         
-        # Создание промпта
-        prompt = PromptTemplate(
-            input_variables=["context", "question"],
-            template=prompt_template
+        # Подготовка промпта
+        system_prompt = "Ты эксперт по философским и религиозным традициям."
+        user_prompt = prompt_template.format(context=context, question=question)
+        
+        # Генерация ответа через LLM Manager с fallback
+        llm_result = await llm_manager.generate_with_fallback(
+            prompt=user_prompt,
+            system_prompt=system_prompt,
+            temperature=0.3,
+            max_tokens=500,
         )
         
-        # Генерация ответа
-        chain = LLMChain(llm=self.llm, prompt=prompt)
-        result = await chain.arun(context=context, question=question)
+        answer = llm_result["response"]
         
         # Пост-валидация источников
-        validated_sources = validate_sources(result, sources)
+        validated_sources = validate_sources(answer, sources)
         
-        return result, validated_sources
+        # Метаданные о использованном провайдере
+        provider_metadata = {
+            "llm_provider": llm_result["provider"],
+            "llm_model": llm_result["model"],
+            "fallback_used": llm_result["fallback_used"],
+        }
+        
+        return answer, validated_sources, provider_metadata
     
     def generate_cache_key(self, question: str, tradition_id: str) -> str:
         """Генерация ключа для кэширования"""
@@ -162,8 +165,8 @@ class RAGPipeline:
                 "status": "no_sources",
             }
         
-        # Шаг 2: Генерация ответа
-        answer, validated_sources = await self.generate_answer(
+        # Шаг 2: Генерация ответа с автоматическим fallback
+        answer, validated_sources, provider_metadata = await self.generate_answer(
             question, tradition_id, sources
         )
         
@@ -192,5 +195,6 @@ class RAGPipeline:
             "metadata": {
                 "total_sources_found": len(sources),
                 "validated_sources": len(validated_sources),
+                **provider_metadata,  # Добавляем информацию о провайдере
             }
         }
