@@ -49,4 +49,20 @@ htmlcov/
 
 # PWA
 public/sw.js
-public/workbox-*.js
+
+# SSL Certificates (NEVER commit private keys!)
+ssl/certs/*.pem
+ssl/certs/*.key
+ssl/certs/*.crt
+ssl/private/
+*.pem
+*.key
+!ssl/certs/.gitkeep
+
+# Let's Encrypt
+letsencrypt/
+etc/letsencrypt/
+
+# Temporary SSL files
+ssl/*.tar.gz
+ssl/*.backup

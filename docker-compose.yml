@@ -1,21 +1,117 @@
-version: '3.0'
+version: '3.8'
 
 services:
+  # PostgreSQL Database with pgvector
   db:
     image: pgvector/pgvector:pg15
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: answers_db
+      POSTGRES_USER: ${DB_USER:-user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-answers_db}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - answers-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # Redis Cache
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - answers-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (FastAPI)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-user}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-answers_db}
+      - REDIS_URL=redis://redis:6379
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - QWEN_API_BASE_URL=${QWEN_API_BASE_URL}
+      - QWEN_API_KEY=${QWEN_API_KEY}
+      - QWEN_MODEL=${QWEN_MODEL:-qwen2.5-7b-instruct}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://localhost:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+      - HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://yourdomain.com}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - answers-network
+    volumes:
+      - ./backend:/app
+      - backend-logs:/app/logs
+    restart: unless-stopped
+
+  # Frontend (Next.js) with Nginx reverse proxy and SSL
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # SSL certificates
+      - ./ssl/certs:/etc/nginx/ssl:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      # Let's Encrypt certificates (if using certbot)
+      - letsencrypt-www:/var/www/certbot
+      - letsencrypt-conf:/etc/letsencrypt
+      # Static files
+      - ./frontend/public:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+    networks:
+      - answers-network
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://yourdomain.com/api}
+
+  # Certbot for automatic SSL certificate renewal (optional)
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - letsencrypt-www:/var/www/certbot
+      - letsencrypt-conf:/etc/letsencrypt
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - answers-network
+    restart: unless-stopped
+
+networks:
+  answers-network:
+    driver: bridge
 
 volumes:
   pgdata:
+  redis-data:
+  backend-logs:
+  letsencrypt-www:
+  letsencrypt-conf:

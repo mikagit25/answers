@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379"
     
     # LLM Providers Configuration (Multiple providers with fallback)
-    # Priority order: GROQ -> OPENROUTER -> OLLAMA (local) -> HUGGINGFACE
+    # Priority order: GROQ -> OPENROUTER -> QWEN -> OLLAMA (local) -> HUGGINGFACE
     
     # Groq (Free tier: 30 requests/min, 200 requests/day)
     GROQ_API_KEY: str = ""
@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     # OpenRouter (Free models available)
     OPENROUTER_API_KEY: str = ""
     OPENROUTER_MODEL: str = "meta-llama/llama-3-8b-instruct:free"  # Free tier
+    
+    # Qwen API (Self-hosted or Alibaba Cloud)
+    QWEN_API_BASE_URL: str = "http://localhost:8000/v1"  # Your Qwen server URL
+    QWEN_API_KEY: str = ""  # Optional, if using authentication
+    QWEN_MODEL: str = "qwen2.5-7b-instruct"  # Model name on your server
     
     # Ollama (Local, completely free)
     OLLAMA_BASE_URL: str = "http://localhost:11434"
@@ -27,7 +32,7 @@ class Settings(BaseSettings):
     HUGGINGFACE_MODEL: str = "HuggingFaceH4/zephyr-7b-beta"
     
     # Fallback Configuration
-    LLM_PROVIDER_PRIORITY: List[str] = ["groq", "openrouter", "ollama", "huggingface"]
+    LLM_PROVIDER_PRIORITY: List[str] = ["groq", "openrouter", "qwen", "ollama", "huggingface"]
     MAX_RETRIES_PER_PROVIDER: int = 3
     REQUEST_TIMEOUT: int = 30  # seconds
     

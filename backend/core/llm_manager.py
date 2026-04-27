@@ -297,6 +297,97 @@ class HuggingFaceProvider(BaseLLMProvider):
             raise LLMProviderError(self.name, f"Request failed: {str(e)}")
 
 
+class QwenProvider(BaseLLMProvider):
+    """
+    Qwen API Provider (Self-hosted or Alibaba Cloud)
+    Supports OpenAI-compatible API format for easy integration.
+    Can be shared across multiple projects simultaneously.
+    """
+    
+    def __init__(self):
+        super().__init__("qwen")
+        # Remove trailing /v1 if present, then add /chat/completions
+        base = settings.QWEN_API_BASE_URL.rstrip('/')
+        if base.endswith('/v1'):
+            self.base_url = f"{base}/chat/completions"
+        else:
+            self.base_url = f"{base}/chat/completions"
+    
+    def is_available(self) -> bool:
+        # Check if base URL is configured
+        if not settings.QWEN_API_BASE_URL:
+            return False
+        
+        if self.is_disabled:
+            return False
+        
+        # Try to ping the server
+        try:
+            import socket
+            from urllib.parse import urlparse
+            parsed = urlparse(settings.QWEN_API_BASE_URL)
+            host = parsed.hostname or 'localhost'
+            port = parsed.port or (443 if parsed.scheme == 'https' else 80)
+            
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(2)
+            result = sock.connect_ex((host, port))
+            sock.close()
+            return result == 0
+        except:
+            return False
+    
+    async def generate(self, prompt: str, **kwargs) -> str:
+        if not self.is_available():
+            raise LLMProviderError(self.name, "Qwen server not available")
+        
+        headers = {
+            "Content-Type": "application/json",
+        }
+        
+        # Add API key if configured
+        if settings.QWEN_API_KEY:
+            headers["Authorization"] = f"Bearer {settings.QWEN_API_KEY}"
+        
+        payload = {
+            "model": settings.QWEN_MODEL,
+            "messages": [
+                {"role": "system", "content": kwargs.get("system_prompt", "")},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": kwargs.get("temperature", 0.3),
+            "max_tokens": kwargs.get("max_tokens", 500),
+        }
+        
+        try:
+            async with httpx.AsyncClient(timeout=settings.REQUEST_TIMEOUT) as client:
+                response = await client.post(self.base_url, json=payload, headers=headers)
+                
+                if response.status_code == 429:
+                    raise RateLimitError(self.name, "Rate limit exceeded", 429)
+                
+                if response.status_code == 503:
+                    raise LLMProviderError(self.name, "Service unavailable", 503)
+                
+                response.raise_for_status()
+                data = response.json()
+                
+                self.record_success()
+                return data["choices"][0]["message"]["content"]
+                
+        except httpx.HTTPStatusError as e:
+            self.record_error(e)
+            if e.response.status_code == 429:
+                raise RateLimitError(self.name, "Rate limit exceeded", 429)
+            raise LLMProviderError(self.name, f"HTTP error: {e.response.status_code}", e.response.status_code)
+        except httpx.ConnectError as e:
+            self.record_error(e)
+            raise LLMProviderError(self.name, f"Cannot connect to Qwen server: {str(e)}")
+        except Exception as e:
+            self.record_error(e)
+            raise LLMProviderError(self.name, f"Request failed: {str(e)}")
+
+
 class LLMProviderManager:
     """
     Manager для управления несколькими LLM провайдерами с автоматическим fallback.
@@ -307,6 +398,7 @@ class LLMProviderManager:
         self.providers: Dict[str, BaseLLMProvider] = {
             "groq": GroqProvider(),
             "openrouter": OpenRouterProvider(),
+            "qwen": QwenProvider(),
             "ollama": OllamaProvider(),
             "huggingface": HuggingFaceProvider(),
         }
@@ -376,6 +468,7 @@ class LLMProviderManager:
         model_map = {
             "groq": settings.GROQ_MODEL,
             "openrouter": settings.OPENROUTER_MODEL,
+            "qwen": settings.QWEN_MODEL,
             "ollama": settings.OLLAMA_MODEL,
             "huggingface": settings.HUGGINGFACE_MODEL,
         }
